@@ -8,6 +8,15 @@ import java.io.FileReader;
 import java.io.IOException;
 
 public class CommandHandler {
+    private final SystemExit systemExit;
+
+    public CommandHandler(SystemExit systemExit) {
+        this.systemExit = systemExit;
+    }
+
+    public CommandHandler() {
+        this(new DefaultSystemExit());
+    }
 
     /**
      * Counts the number of bytes in the specified file and prints the result.
@@ -56,9 +65,7 @@ public class CommandHandler {
             int wordCount = 0;
             String line;
             while ((line = br.readLine()) != null) {
-                // Regex to split on whitespaces
                 String[] wordsArr = line.split("\\s");
-                // Only count non-empty words
                 for (String word : wordsArr) {
                     if (!word.isEmpty()) {
                         wordCount++;
@@ -101,7 +108,7 @@ public class CommandHandler {
      */
     public void printErrorMessage(String path) {
         System.out.println("ccwc: " + path + ": No such file or directory");
-        System.exit(1);
+        systemExit.exit(1);
     }
 
     /**
@@ -129,7 +136,7 @@ public class CommandHandler {
         if (!verifyFlag(flag)) {
             String option = flag.substring(1);
             System.out.println("ccwc: invalid option -- '" + option + "'");
-            System.exit(1);
+            systemExit.exit(1);
         }
     }
 

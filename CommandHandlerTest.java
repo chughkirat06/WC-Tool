@@ -6,21 +6,23 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
+import static org.mockito.Mockito.*;
 import static org.junit.Assert.assertEquals;
 
 public class CommandHandlerTest {
-    private CommandHandler handler = new CommandHandler();
 
+    private CommandHandler handler;
     private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
     private final PrintStream originalOut = System.out;
+    private SystemExit mockExit;
 
     @Before
     public void setUp() {
+        mockExit = mock(SystemExit.class);
+        handler = new CommandHandler(mockExit);
         // Redirect System.out to ByteArraystream
         System.setOut(new PrintStream(outContent));
     }
@@ -59,19 +61,27 @@ public class CommandHandlerTest {
         assertEquals("12 ", outContent.toString());
     }
 
-    // @Test
-    // public void testInvalidFlagMessage() {
-    // handler.invalidFlagMessage("-z");
-    // assertEquals("ccwc: invalid option -- 'z'", outContent.toString());
-    // }
+    @Test
+    public void testDefaultProcessCommand() throws IOException {
+        String path = createTempFile("Hello\nworld test");
+        handler.processCommand(" ", path);
+        assertEquals("2 3 16 " + path, outContent.toString());
+    }
 
-    // @Test
-    // public void testNonExistentFile() {
-    // String path = "NewFile.txt";
-    // handler.countBytes(path);
-    // assertEquals("ccwc: NewFile.txt: No such file or directory",
-    // outContent.toString());
-    // }
+    @Test
+    public void testInvalidFlagMessage() {
+        handler.invalidFlagMessage("-z");
+        assertEquals("ccwc: invalid option -- 'z'", outContent.toString().trim());
+        verify(mockExit).exit(1);
+    }
+
+    @Test
+    public void testNonExistentFile() {
+        String path = "NonExistentFile.txt";
+        handler.countBytes(path);
+        assertEquals("ccwc: NonExistentFile.txt: No such file or directory", outContent.toString().trim());
+        verify(mockExit).exit(1);
+    }
 
     private String createTempFile(String content) throws IOException {
         File tempFile = File.createTempFile("tempFile", ".txt");
@@ -81,5 +91,4 @@ public class CommandHandlerTest {
         }
         return tempFile.getAbsolutePath();
     }
-
 }
